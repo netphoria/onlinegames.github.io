@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Game</title>
+    <title>Jumpman Game</title>
     <style>
         body {
             margin: 0;
@@ -13,33 +13,39 @@
             position: absolute;
             width: 50px;
             height: 50px;
-            background-color: red;
+            background-color: blue;
             bottom: 0;
-            animation: jump 1s infinite alternate;
-        }
-        @keyframes jump {
-            0% {
-                transform: translateY(0);
-            }
-            100% {
-                transform: translateY(-200px);
-            }
         }
     </style>
 </head>
 <body>
     <div id="player"></div>
+
     <script>
         const player = document.getElementById("player");
+        let isJumping = false;
 
         document.addEventListener("keydown", jump);
 
         function jump(event) {
-            if (event.key === " " || event.key === "ArrowUp") {
-                player.style.animation = "none";
-                setTimeout(() => {
-                    player.style.animation = "jump 1s infinite alternate";
-                }, 10);
+            if (event.keyCode === 32 && !isJumping) {
+                isJumping = true;
+                let position = 0;
+                const jumpInterval = setInterval(() => {
+                    if (position >= 150) {
+                        clearInterval(jumpInterval);
+                        const fallInterval = setInterval(() => {
+                            if (position <= 0) {
+                                clearInterval(fallInterval);
+                                isJumping = false;
+                            }
+                            position -= 5;
+                            player.style.bottom = position + "px";
+                        }, 20);
+                    }
+                    position += 5;
+                    player.style.bottom = position + "px";
+                }, 20);
             }
         }
     </script>
