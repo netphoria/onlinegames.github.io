@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jumpman Game</title>
+    <title>Space Game</title>
     <style>
         body {
             margin: 0;
@@ -13,63 +13,154 @@
             position: relative;
             width: 100%;
             height: 100vh;
-            background-color: lightgray;
+            background-color: black;
         }
-        #player {
+        #spaceship {
             position: absolute;
             width: 50px;
             height: 50px;
             background-color: blue;
             bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
         }
-        .platform {
+        .rock {
             position: absolute;
-            width: 100px;
-            height: 20px;
-            background-color: green;
-            bottom: 50px;
-            animation: movePlatform linear infinite 5s;
-        }
-        @keyframes movePlatform {
-            0% { left: -100px; }
-            100% { left: 100%; }
+            width: 30px;
+            height: 30px;
+            background-color: gray;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="player"></div>
-        <div class="platform"></div>
+        <div id="spaceship"></div>
     </div>
 
     <script>
         const gameContainer = document.getElementById("game-container");
-        const player = document.getElementById("player");
-        let isJumping = false;
+        const spaceship = document.getElementById("spaceship");
 
-        document.addEventListener("keydown", jump);
+        let spaceshipX = 50; // initial spaceship position
+        let isShooting = false;
+        let rocks = [];
 
-        function jump(event) {
-            if (event.keyCode === 32 && !isJumping) {
-                isJumping = true;
-                let position = 0;
-                const jumpInterval = setInterval(() => {
-                    if (position >= 150) {
-                        clearInterval(jumpInterval);
-                        const fallInterval = setInterval(() => {
-                            if (position <= 0) {
-                                clearInterval(fallInterval);
-                                isJumping = false;
-                            }
-                            position -= 10;
-                            player.style.bottom = position + "px";
-                        }, 10);
-                    }
-                    position += 10;
-                    player.style.bottom = position + "px";
-                }, 10);
+        document.addEventListener("keydown", moveSpaceship);
+        gameContainer.addEventListener("touchmove", moveSpaceshipMobile);
+        gameContainer.addEventListener("touchstart", startShooting);
+        gameContainer.addEventListener("touchend", stopShooting);
+        document.addEventListener("keydown", handleKeyPress);
+        document.addEventListener("keyup", handleKeyRelease);
+
+        function moveSpaceship(event) {
+            if (event.keyCode === 37) { // Left arrow key
+                spaceshipX -= 10;
+            } else if (event.keyCode === 39) { // Right arrow key
+                spaceshipX += 10;
+            }
+            updateSpaceshipPosition();
+        }
+
+        function moveSpaceshipMobile(event) {
+            const touchX = event.touches[0].clientX;
+            spaceshipX = Math.min(Math.max(touchX, 0), window.innerWidth);
+            updateSpaceshipPosition();
+        }
+
+        function startShooting() {
+            isShooting = true;
+        }
+
+        function stopShooting() {
+            isShooting = false;
+        }
+
+        function handleKeyPress(event) {
+            if (event.keyCode === 32) { // Spacebar
+                isShooting = true;
             }
         }
+
+        function handleKeyRelease(event) {
+            if (event.keyCode === 32) { // Spacebar
+                isShooting = false;
+            }
+        }
+
+        function updateSpaceshipPosition() {
+            spaceship.style.left = spaceshipX + "px";
+        }
+
+        function createRock() {
+            const rock = document.createElement("div");
+            rock.className = "rock";
+            rock.style.left = Math.random() * (window.innerWidth - 30) + "px";
+            rock.style.top = Math.random() * (window.innerHeight - 30) + "px";
+            gameContainer.appendChild(rock);
+            rocks.push(rock);
+        }
+
+        function shoot() {
+            const bullet = document.createElement("div");
+            bullet.className = "bullet";
+            bullet.style.left = spaceshipX + "px";
+            bullet.style.top = window.innerHeight - 50 + "px";
+            gameContainer.appendChild(bullet);
+
+            const bulletInterval = setInterval(() => {
+                bullet.style.top = parseInt(bullet.style.top) - 10 + "px";
+
+                if (parseInt(bullet.style.top) < 0) {
+                    clearInterval(bulletInterval);
+                    gameContainer.removeChild(bullet);
+                }
+
+                for (const rock of rocks) {
+                    const rockRect = rock.getBoundingClientRect();
+                    const bulletRect = bullet.getBoundingClientRect();
+                    if (
+                        bulletRect.left < rockRect.right &&
+                        bulletRect.right > rockRect.left &&
+                        bulletRect.top < rockRect.bottom &&
+                        bulletRect.bottom > rockRect.top
+                    ) {
+                        gameContainer.removeChild(rock);
+                        rocks.splice(rocks.indexOf(rock), 1);
+                        clearInterval(bulletInterval);
+                        gameContainer.removeChild(bullet);
+                    }
+                }
+            }, 20);
+        }
+
+        setInterval(createRock, 2000);
+
+        function checkCollision() {
+            const spaceshipRect = spaceship.getBoundingClientRect();
+            for (const rock of rocks) {
+                const rockRect = rock.getBoundingClientRect();
+                if (
+                    spaceshipRect.left < rockRect.right &&
+                    spaceshipRect.right > rockRect.left &&
+                    spaceshipRect.top < rockRect.bottom &&
+                    spaceshipRect.bottom > rockRect.top
+                ) {
+                    gameOver();
+                }
+            }
+        }
+
+        function gameOver() {
+            alert("Game Over");
+            location.reload();
+        }
+
+        setInterval(checkCollision, 100);
+        setInterval(() => {
+            if (isShooting) {
+                shoot();
+            }
+        }, 300);
     </script>
 </body>
 </html>
