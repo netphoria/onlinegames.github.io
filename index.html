@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            bottom: 0;
+            animation: jump 1s infinite alternate;
+        }
+        @keyframes jump {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="player"></div>
+    <script>
+        const player = document.getElementById("player");
+
+        document.addEventListener("keydown", jump);
+
+        function jump(event) {
+            if (event.key === " " || event.key === "ArrowUp") {
+                player.style.animation = "none";
+                setTimeout(() => {
+                    player.style.animation = "jump 1s infinite alternate";
+                }, 10);
+            }
+        }
+    </script>
+</body>
+</html>
